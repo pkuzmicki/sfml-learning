@@ -35,7 +35,7 @@ void Input::updateKeys() {
 void Input::updateMouse() {
     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
         this->mousePosition = sf::Mouse::getPosition(*window);
-        printf("%i, %i\n", this->getMousePosition().x, this->getMousePosition().y); 
+        //printf("%i, %i\n", this->getMousePosition().x, this->getMousePosition().y); 
     } 
 }
 
