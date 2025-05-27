@@ -3,15 +3,19 @@
 #include <fstream>
 #include <string>
 #include <iostream>
-#include <cmath> 
+#include <cmath>
+#include <random>
 
 #include "Input.h"
 
 
 
 sf::Vector2f lerp(sf::Vector2f start, sf::Vector2f end, float t) {
-    //std::cout<<"skok";
-    if ((end - start).x < 0.1 && (end - start).y < 0.1) {
+
+    sf::Vector2f distance(end - start);
+    std::cout<<distance.x<<distance.y<<std::endl;
+
+    if ((end - start).x < 0.1 && (end - start).y < 0.01) {
         return end;
     }
 
@@ -27,10 +31,6 @@ sf::Vector2f move(sf::Vector2f start, sf::Vector2f end) {
 }
 
 int main() {
-    //sf::Clock clock;
-    //clock.start();
-
-    
     int scale = 3;
     int tileSize = 32 * scale;
     int tilesInWidth = 9;
@@ -54,6 +54,9 @@ int main() {
     sf::Vector2f playerPosition(200.f, 200.f);
 
     sf::Vector2f worldOffset(0.f, 0.f);
+
+    sf::FileInputStream i0("../res/WizardOfTheMoon-YG5y.ttf");
+    sf::Font font(i0);
 
     sf::FileInputStream inputS("../res/goblin.png");
     sf::Texture player1(inputS);
@@ -91,7 +94,16 @@ int main() {
         row++;
     }
     rooms.close();
-    
+
+    sf::Clock clock;
+    clock.start();
+    sf::Clock printLocation;
+    printLocation.start();
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution rand(1, 6);
+    int dice_num;
 
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent()) {
@@ -100,10 +112,14 @@ int main() {
             } 
         }
 
-         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::X)) {
+
+
+         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::X) && clock.getElapsedTime() > sf::seconds(1.f)) {
                 isInBattleMode = !isInBattleMode;
                 x = 100.f;
                 y = 100.f;
+                dice_num = rand(gen);
+                clock.restart();
             }
 
             input.updateKeys();
@@ -142,19 +158,12 @@ int main() {
            
             if (input.getMousePosition().x < roomWidth && input.getMousePosition().x > 0) {
                 if (input.getMousePosition().y < roomWidth && input.getMousePosition().y > 0) {
+
                     if (input.getMousePosition().x != 0 && input.getMousePosition().y != 0) {
-                        //if (std::round(playerPosition.x) != std::round(endPosition.x) && std::round(playerPosition.y) != std::round(endPosition.y)) {
                         if (playerPosition != endPosition) {
                             playerPosition = lerp(startPosition, endPosition, 0.1);
-                            // playerPosition.x -= sprite1.getLocalBounds().size.x/2;
-                            // playerPosition.y -= sprite1.getLocalBounds().size.y/2;
-                            //playerPosition.x -=
-                            //playerPosition = move(startPosition, endPosition);
-
-                            std::cout<<"Gracz: "<<startPosition.x<<" "<<startPosition.y<<"\n";
-                            std::cout<<"Koniec: "<<endPosition.x<<" "<<endPosition.y<<"\n";  
                         } else {
-                            std::cout<<"stoje sztywno\n";
+                            //std::cout<<"stoje sztywno\n";
                         } 
                     }
                 }
@@ -164,12 +173,8 @@ int main() {
             
             
             if (playerPosition.y < 32) {
-                worldOffset.y += roomHeight;
+                //worldOffset.y += roomHeight;
                 playerPosition.y += roomHeight - tileSize;
-                //playerPosition.y = roomHeight/2;
-                // std::cout<<"Gracz: "<<playerPosition.y<<"\n";
-                // std::cout<<"Poczatek: "<<startPosition.y<<"\n";
-                // std::cout<<"Koniec: "<<endPosition.y<<"\n";
             }
 
             if (playerPosition.y > window.getSize().y - 32) {
@@ -187,11 +192,10 @@ int main() {
                 playerPosition.x -= roomWidth - tileSize;
             }
 
-            // if (endPosition == startPosition) {
-            //     canMove = true;
+            // if (printLocation.getElapsedTime() > sf::seconds(0.5)) {
+            //     std::cout<<"Gracz: "<<startPosition.x<<" "<<startPosition.y<<"\n";
+            //     printLocation.restart();
             // }
-
-
             sprite1.setPosition(playerPosition);
             window.draw(sprite1);
 
@@ -201,11 +205,17 @@ int main() {
         }
 
         if (isInBattleMode) {
-            sf::RectangleShape panel(sf::Vector2(800.f, 150.f));
-            panel.setFillColor(sf::Color(0, 0, 255));
-            panel.setPosition(sf::Vector2(window.getSize().x/2.f, window.getSize().y/2.f));
+            sf::RectangleShape table(sf::Vector2f(roomWidth, 3*tileSize));
+            table.setFillColor(sf::Color(20, 40, 120));
+            table.setPosition(sf::Vector2f(0.0, roomHeight - 3*tileSize));
 
-            window.draw(panel);
+
+            sf::Text dice(font, std::to_string(dice_num));
+            dice.setFillColor(sf::Color(255, 255, 255));
+            dice.setPosition(sf::Vector2f(roomWidth/2, roomHeight - tileSize));
+
+            window.draw(table);
+            window.draw(dice);
         }
 
         float speed = 5.f;
